@@ -17,16 +17,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, ArrowUpDown } from "lucide-react";
-import { type BloodRequest } from "@/lib/api/api-client";
 import { useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { Pagination } from "@/components/ui/pagination";
 import { useState } from "react";
+import { type BloodRequest } from "@/types/blood-requests";
 
 const statusColors = {
-  pending: "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20",
+  open: "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20",
   fulfilled: "bg-green-500/10 text-green-500 hover:bg-green-500/20",
-  cancelled: "bg-red-500/10 text-red-500 hover:bg-red-500/20",
+  closed: "bg-red-500/10 text-red-500 hover:bg-red-500/20",
 } as const;
 
 const urgencyColors = {
@@ -36,7 +36,7 @@ const urgencyColors = {
 } as const;
 
 interface BloodRequestsTableProps {
-  requests: BloodRequest[];
+  data: BloodRequest[];
   pagination: {
     total: number;
     page: number;
@@ -50,7 +50,7 @@ interface BloodRequestsTableProps {
 }
 
 export function BloodRequestsTable({
-  requests,
+  data,
   pagination,
   isLoading,
   onPageChange,
@@ -125,7 +125,7 @@ export function BloodRequestsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>ID</TableHead>
+            {/*<TableHead>ID</TableHead>*/}
             <TableHead>
               <Button
                 variant="ghost"
@@ -156,7 +156,7 @@ export function BloodRequestsTable({
                 <ArrowUpDown className="ml-2 h-4 w-4" />
               </Button>
             </TableHead>
-            <TableHead>Hospital</TableHead>
+            <TableHead>Health Facility</TableHead>
             <TableHead>Patient</TableHead>
             <TableHead>
               <Button
@@ -172,9 +172,9 @@ export function BloodRequestsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {requests.map((request) => (
+          {data.map((request) => (
             <TableRow key={request.id}>
-              <TableCell className="font-medium">{request.id}</TableCell>
+              {/*<TableCell className="font-medium">{request.id}</TableCell>*/}
               <TableCell>
                 <Badge
                   variant="secondary"
@@ -183,7 +183,7 @@ export function BloodRequestsTable({
                   {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                 </Badge>
               </TableCell>
-              <TableCell>{request.bloodType}</TableCell>
+              <TableCell>{request.bloodGroup}</TableCell>
               <TableCell>
                 <Badge
                   variant="secondary"
@@ -192,7 +192,7 @@ export function BloodRequestsTable({
                   {request.urgency.charAt(0).toUpperCase() + request.urgency.slice(1)}
                 </Badge>
               </TableCell>
-              <TableCell>{request.hospital}</TableCell>
+              <TableCell>{request.healthFacility}</TableCell>
               <TableCell>{request.patientName}</TableCell>
               <TableCell>{formatDate(request.createdAt)}</TableCell>
               <TableCell>
