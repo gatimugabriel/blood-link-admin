@@ -1,21 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
+import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "BloodLink Admin",
-  description: "Admin Dashboard for the BloodLink App",
+  title: "Blood Link Admin",
+  description: "Admin dashboard for Blood Link application",
 };
+
+const prefersDarkMode = false
 
 export default function RootLayout({
   children,
@@ -23,11 +20,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={`${prefersDarkMode ? "dark" : ""}`} suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          inter.className
+        )}
+        suppressHydrationWarning
       >
-        {children}
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );
