@@ -1,187 +1,166 @@
- 'use client';
+'use client';
 
-import { useState } from "react";
-import { BloodRequestsTable } from "@/components/blood-requests/blood-requests-table";
-import { useBloodRequests } from "@/hooks/use-blood-requests";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { useState, useCallback, useMemo } from "react";
+import { useBloodRequests, useDeleteBloodRequest } from "@/hooks/use-blood-requests";
+import { DataTable } from "@/components/ui/data-table";
+import { donationRequestsTableColumns } from "@/app/(root)/blood-requests/tableColumns";
 import { Button } from "@/components/ui/button";
-import { Search, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { useExportBloodRequests } from "@/hooks/use-blood-requests";
-
-const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as const;
-const STATUSES = ['pending', 'fulfilled', 'cancelled'] as const;
-const URGENCIES = ['low', 'medium', 'high'] as const;
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 export function BloodRequestsClient() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [sortField, setSortField] = useState('createdAt');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [filters, setFilters] = useState({
-    bloodType: 'all',
-    status: 'all',
-    urgency: 'all',
-    search: '',
-  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isServerSearch, setIsServerSearch] = useState(false);
 
-  const { data, isLoading, error } = useBloodRequests({
+  // Get all data without search first
+  const { data: allData, isLoading: isLoadingAll, error: allError, refetch: refetchAll } = useBloodRequests({
     page,
     limit,
-    sortBy: sortField,
-    sortOrder,
-    ...Object.fromEntries(
-      Object.entries(filters).map(([key, value]) => [
-        key,
-        value === 'all' ? undefined : value
-      ])
-    ),
   });
 
+  // Get server search results when needed
+  const { data: searchData, isLoading: isLoadingSearch, error: searchError, refetch: refetchSearch } = useBloodRequests({
+    page,
+    limit,
+    search: isServerSearch ? searchQuery : undefined,
+  });
+
+  const deleteMutation = useDeleteBloodRequest();
   const exportMutation = useExportBloodRequests();
 
-  const handleSort = (field: string, order: 'asc' | 'desc') => {
-    setSortField(field);
-    setSortOrder(order);
-  };
+  // Determine which data source to use
+  const data = isServerSearch ? searchData : allData;
+  const isLoading = isServerSearch ? isLoadingSearch : isLoadingAll;
+  const error = isServerSearch ? searchError : allError;
+  const refetch = isServerSearch ? refetchSearch : refetchAll;
 
-  const handlePageChange = (newPage: number) => {
+  // Client-side search
+  const filteredData = useMemo(() => {
+    if (!allData?.data || !searchQuery || isServerSearch) {
+      return isServerSearch ? searchData : allData;
+    }
+    
+    const searchLower = searchQuery.toLowerCase();
+    const filtered = allData.data.filter((item) => 
+      item.patientName.toLowerCase().includes(searchLower) ||
+      item.healthFacility.toLowerCase().includes(searchLower) ||
+      item.bloodGroup.toLowerCase().includes(searchLower)
+    );
+
+    // If no results found in client data, trigger server search
+    if (filtered.length === 0) {
+      console.log('No results in client data, switching to server search');
+      setIsServerSearch(true);
+      return searchData; // Return server data (might be loading)
+    }
+
+    return {
+      ...allData,
+      data: filtered,
+      pagination: {
+        ...allData.pagination,
+        total: filtered.length,
+      },
+    };
+  }, [allData, searchData, searchQuery, isServerSearch]);
+
+  const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
-  };
+    setIsServerSearch(false);
+  }, []);
 
-  const handlePageSizeChange = (newLimit: number) => {
+  const handlePageSizeChange = useCallback((newLimit: number) => {
     setLimit(newLimit);
     setPage(1);
-  };
+    setIsServerSearch(false);
+  }, []);
 
-  const handleFilterChange = (key: keyof typeof filters, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
     setPage(1);
-  };
+    setIsServerSearch(false); // Reset to client search for new queries
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+      setIsServerSearch(false);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
+
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success("Blood request deleted successfully");
+      refetch();
+      setIsServerSearch(false);
+    } catch (error) {
+      toast.error("Failed to delete blood request");
+    }
+  }, [deleteMutation, refetch]);
 
   const handleExport = async () => {
     try {
-      await exportMutation.mutateAsync(
-        Object.fromEntries(
-          Object.entries({
-            sortBy: sortField,
-            sortOrder,
-            ...filters,
-          }).map(([key, value]) => [
-            key,
-            value === 'all' ? undefined : value
-          ])
-        )
-      );
+      const blob = await exportMutation.mutateAsync({
+        search: searchQuery || undefined,
+      });
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `blood-requests-export-${new Date().toISOString()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Failed to export blood requests:', error);
+      toast.error("Failed to export blood requests");
     }
   };
-
-  if (error) {
-    return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-red-600">Error</h2>
-          <p className="mt-2 text-gray-600">
-            {error.message}
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Blood Requests</h1>
-        <Button onClick={handleExport} variant="outline">
+        <Button 
+          onClick={handleExport} 
+          variant="outline"
+          disabled={isLoading || isRefreshing}
+        >
           <Download className="mr-2 h-4 w-4" />
           Export
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search requests..."
-            value={filters.search}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
-            className="pl-8"
-          />
-        </div>
-        <Select
-          value={filters.bloodType}
-          onValueChange={(value) => handleFilterChange('bloodType', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Blood Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Blood Types</SelectItem>
-            {BLOOD_TYPES.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={filters.status}
-          onValueChange={(value) => handleFilterChange('status', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {STATUSES.map((status) => (
-              <SelectItem key={status} value={status}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          value={filters.urgency}
-          onValueChange={(value) => handleFilterChange('urgency', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Urgency" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Urgencies</SelectItem>
-            {URGENCIES.map((urgency) => (
-              <SelectItem key={urgency} value={urgency}>
-                {urgency.charAt(0).toUpperCase() + urgency.slice(1)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {data && (
-        <BloodRequestsTable
-          data={data.data}
-          pagination={{
-            total: data.pagination.total,
-            page,
-            limit,
-            totalPages: Math.ceil(data.pagination.total / limit),
-          }}
-          isLoading={isLoading}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          onSort={handleSort}
-        />
-      )}
+      <DataTable
+        columns={donationRequestsTableColumns}
+        data={filteredData?.data ?? []}
+        filterBy="patientName"
+        tableName="blood requests"
+        isLoading={isLoading || isRefreshing}
+        error={error}
+        pagination={{
+          currentPage: page,
+          totalPages: filteredData ? Math.ceil(filteredData.pagination.total / limit) : 0,
+          totalItems: filteredData?.pagination.total ?? 0,
+          pageSize: limit,
+        }}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        onRefresh={handleRefresh}
+        onSearch={handleSearch}
+        onDelete={handleDelete}
+      />
+      <Toaster />
     </div>
   );
-}
+} 

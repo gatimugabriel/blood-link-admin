@@ -14,6 +14,7 @@ export const endpoints = {
         list: '/admin/requests',
         get: (id: string) => `/admin/requests/${id}`,
         update: (id: string) => `/admin/requests/${id}`,
+        delete: (id: string) => `/admin/requests/${id}`,
         stats: '/admin/reports/blood-requests/stats',
         export: '/admin/reports/blood-requests/export',
     },
