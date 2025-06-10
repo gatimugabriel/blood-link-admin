@@ -98,7 +98,7 @@ export function useBloodRequest(id: string) {
   return useQuery({
     queryKey: ['blood-request', id],
     queryFn: async () => {
-      const { data } = await apiClient.get<BloodRequest>(endpoints.bloodRequests.get(id));
+      const { data } = await apiClient.get<BloodRequest>(endpoints.bloodRequests.get(id));      
       return data;
     },
   });

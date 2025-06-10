@@ -1,5 +1,5 @@
 import {ColumnDef} from "@tanstack/react-table"
-import {ArrowUpDown, Copy, EyeIcon, MoreHorizontal, TrashIcon} from "lucide-react"
+import {ArrowUpDown, Check, Copy, EyeIcon, MoreHorizontal, TrashIcon} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from "@/components/ui/dropdown-menu"
 import {formatDate} from "@/lib/utils/date";
@@ -16,6 +16,8 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
+import { useState } from "react";
+
 
 // Status and urgency color mappings
 const statusColors = {
@@ -101,11 +103,34 @@ export const donationRequestsTableColumns: ColumnDef<BloodRequest>[] = [
                         <TooltipTrigger asChild>
                             <div className="flex items-center space-x-2 cursor-pointer">
                                 <span>{truncatedID}</span>
-                                <Copy className="ml-2 h-4 w-4 cursor-pointer"
-                                      onClick={() => navigator.clipboard.writeText(id)}/>
+                                {(() => {
+                                    const [copied, setCopied] = useState(false);
+                                    
+                                    const handleCopy = async () => {
+                                        await navigator.clipboard.writeText(id);
+                                        setCopied(true);
+                                        setTimeout(() => setCopied(false), 2000);
+                                    };
+                                    
+                                    return (
+                                        <div 
+                                            className="ml-2 h-4 w-4 cursor-pointer"
+                                            onClick={handleCopy}
+                                        >
+                                            {copied ? (
+                                                <Check className="h-4 w-4 text-green-600" />
+                                            ) : (
+                                                <Copy className="h-4 w-4" />
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+                                
+                                {/* <Copy className="ml-2 h-4 w-4 cursor-pointer"
+                                      onClick={() => navigator.clipboard.writeText(id)}/> */}
                             </div>
                         </TooltipTrigger>
-                        <TooltipContent className={`bg-background text-black p-4 border`}>
+                        <TooltipContent className={`bg-background text-text p-4 border`}>
                             <p>{id}</p>
                         </TooltipContent>
                     </Tooltip>

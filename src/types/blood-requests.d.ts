@@ -8,10 +8,11 @@ interface BloodRequest {
     patientName: string;
     mobileNumber: string;
     requestLocation: {
-        latitude: number;
-        longitude: number;
-        address: string;
+        coordinates:[number, number] // [longitude, latitude]
+        // latitude: number;
+        // longitude: number;
     };
+    stringRequestLocation: any
     createdAt: string;
     updatedAt: string;
 }
