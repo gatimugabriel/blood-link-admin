@@ -12,7 +12,6 @@ export const bloodRequestKeys = {
   stats: () => [...bloodRequestKeys.all, 'stats'] as const,
 };
 
-
 // -------- Hooks -------- //
 export function useBloodRequests(options: UseBloodRequestsOptions = {}): UseQueryResult<PaginatedResponse<BloodRequest>> {
   const {
@@ -24,7 +23,7 @@ export function useBloodRequests(options: UseBloodRequestsOptions = {}): UseQuer
     status,
     bloodType,
     urgency,
-    enableSearch = false, // Default to client-side search
+    enableSearch = false, // Default
   } = options;
 
   return useQuery({
@@ -33,7 +32,7 @@ export function useBloodRequests(options: UseBloodRequestsOptions = {}): UseQuer
       limit, 
       sortBy, 
       sortOrder, 
-      ...(enableSearch ? { search } : {}), // Only include search in query key if server-side search is enabled
+      ...(enableSearch ? { search } : {}),
       status, 
       bloodType, 
       urgency 
@@ -41,13 +40,13 @@ export function useBloodRequests(options: UseBloodRequestsOptions = {}): UseQuer
     queryFn: async () => {
       const params = new URLSearchParams();
       
-      // Add pagination and sorting params
+      // pagination + sorting params
       params.append('page', page.toString());
       params.append('limit', limit.toString());
       params.append('sortBy', sortBy);
       params.append('sortOrder', sortOrder);
 
-      // Add filter params if they exist
+      // filter params
       if (enableSearch && search) params.append('search', search);
       if (status) params.append('status', status);
       if (bloodType) params.append('bloodType', bloodType);
@@ -58,7 +57,7 @@ export function useBloodRequests(options: UseBloodRequestsOptions = {}): UseQuer
       );
       return data;
     },
-    staleTime: 0, // Consider data stale immediately to ensure fresh data on page change
+    staleTime: 0,
   });
 }
 
@@ -109,7 +108,6 @@ export function useExportBloodRequests() {
   });
 }
 
-// Add delete mutation
 export function useDeleteBloodRequest() {
   return useMutation({
     mutationFn: async (id: string) => {

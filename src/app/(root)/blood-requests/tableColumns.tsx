@@ -1,18 +1,9 @@
 import {ColumnDef} from "@tanstack/react-table"
-import {ArrowUpDown, Badge, EyeIcon, MoreHorizontal, PencilLine, TrashIcon} from "lucide-react"
+import {ArrowUpDown, Copy, EyeIcon, MoreHorizontal, TrashIcon} from "lucide-react"
 import {Button} from "@/components/ui/button"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
-import Link from "next/link";
-import { formatDate } from "@/lib/utils/date";
-import { useRouter } from "next/navigation";
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from "@/components/ui/dropdown-menu"
+import {formatDate} from "@/lib/utils/date";
+import {useRouter} from "next/navigation";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -24,6 +15,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 
 // Status and urgency color mappings
 const statusColors = {
@@ -43,7 +35,7 @@ interface TableActionsProps {
     onDelete: (id: string) => void;
 }
 
-function TableActions({ request, onDelete }: TableActionsProps) {
+function TableActions({request, onDelete}: TableActionsProps) {
     const router = useRouter();
 
     return (
@@ -99,17 +91,27 @@ function TableActions({ request, onDelete }: TableActionsProps) {
 export const donationRequestsTableColumns: ColumnDef<BloodRequest>[] = [
     {
         accessorKey: "id",
-        header: ({column}) => {
+        header: "ID",
+        cell: ({row}) => {
+            const id = row.original.id;
+            const truncatedID = id.slice(0, 2) + "..."
             return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    ID
-                    <ArrowUpDown className="ml-2 h-4 w-4"/>
-                </Button>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="flex items-center space-x-2 cursor-pointer">
+                                <span>{truncatedID}</span>
+                                <Copy className="ml-2 h-4 w-4 cursor-pointer"
+                                      onClick={() => navigator.clipboard.writeText(id)}/>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent className={`bg-background text-black p-4 border`}>
+                            <p>{id}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             )
-        },
+        }
     },
     {
         accessorKey: "units",
@@ -224,7 +226,7 @@ export const donationRequestsTableColumns: ColumnDef<BloodRequest>[] = [
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                     className="flex items-center justify-center w-full"
                 >
-                    Created At
+                    Time
                     <ArrowUpDown className="ml-2 h-4 w-4"/>
                 </Button>
             )
