@@ -21,10 +21,13 @@ interface UseBloodRequestsOptions {
     page?: number;
     limit?: number;
     sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
     search?: string;
-    status?: string;
+    sortOrder?: 'asc' | 'desc';
     bloodType?: string;
-    urgency?: string;
+    status?: 'open' | 'closed' | 'fulfilled';
+    dateFrom?: string;
+    dateTo?: string;
+    bloodGroup?: string;
+    urgency?: 'low' | 'medium' | 'high';
     enableSearch?: boolean; // controls whether to hit the server for new results or use state data for searching
 }

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, UseQueryResult } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/api-client';
 import { endpoints } from '@/lib/api/api-endpoints';
 
@@ -12,45 +12,78 @@ export const bloodRequestKeys = {
   stats: () => [...bloodRequestKeys.all, 'stats'] as const,
 };
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface UseBloodRequestsOptions {
+  page?: number;
+  limit?: number;
+  search?: string;
+  enableSearch?: boolean;
+  status?: 'open' | 'closed' | 'fulfilled';
+  dateFrom?: string;
+  dateTo?: string;
+  bloodGroup?: string;
+  urgency?: 'low' | 'medium' | 'high';
+}
+
 // -------- Hooks -------- //
 export function useBloodRequests(options: UseBloodRequestsOptions = {}): UseQueryResult<PaginatedResponse<BloodRequest>> {
   const {
     page = 1,
     limit = 10,
-    sortBy = 'createdAt',
-    sortOrder = 'desc',
     search,
+    enableSearch = true,
     status,
-    bloodType,
+    dateFrom,
+    dateTo,
+    bloodGroup,
     urgency,
-    enableSearch = false, // Default
   } = options;
 
   return useQuery({
-    queryKey: bloodRequestKeys.list(JSON.stringify({ 
-      page, 
-      limit, 
-      sortBy, 
-      sortOrder, 
-      ...(enableSearch ? { search } : {}),
-      status, 
-      bloodType, 
-      urgency 
+    queryKey: bloodRequestKeys.list(JSON.stringify({
+      page,
+      limit,
+      search: enableSearch ? search : undefined,
+      status,
+      dateFrom,
+      dateTo,
+      bloodGroup,
+      urgency,
     })),
     queryFn: async () => {
       const params = new URLSearchParams();
-      
-      // pagination + sorting params
       params.append('page', page.toString());
       params.append('limit', limit.toString());
-      params.append('sortBy', sortBy);
-      params.append('sortOrder', sortOrder);
-
-      // filter params
-      if (enableSearch && search) params.append('search', search);
-      if (status) params.append('status', status);
-      if (bloodType) params.append('bloodType', bloodType);
-      if (urgency) params.append('urgency', urgency);
+      
+      if (enableSearch && search) {
+        params.append('search', search);
+      }
+      
+      // Add filter parameters
+      if (status) {
+        params.append('status', status);
+      }
+      if (dateFrom) {
+        params.append('dateFrom', dateFrom);
+      }
+      if (dateTo) {
+        params.append('dateTo', dateTo);
+      }
+      if (bloodGroup) {
+        params.append('bloodGroup', bloodGroup);
+      }
+      if (urgency) {
+        params.append('urgency', urgency);
+      }
 
       const { data } = await apiClient.get<PaginatedResponse<BloodRequest>>(
         `${endpoints.bloodRequests.list}?${params.toString()}`
@@ -68,7 +101,6 @@ export function useBloodRequest(id: string) {
       const { data } = await apiClient.get<BloodRequest>(endpoints.bloodRequests.get(id));
       return data;
     },
-    enabled: !!id,
   });
 }
 
@@ -87,17 +119,24 @@ export function useExportBloodRequests() {
     mutationFn: async (options: UseBloodRequestsOptions = {}) => {
       const params = new URLSearchParams();
       
-      // Add pagination and sorting params
-      if (options.page) params.append('page', options.page.toString());
-      if (options.limit) params.append('limit', options.limit.toString());
-      if (options.sortBy) params.append('sortBy', options.sortBy);
-      if (options.sortOrder) params.append('sortOrder', options.sortOrder);
-
-      // Add filter params if they exist
-      if (options.search) params.append('search', options.search);
-      if (options.status) params.append('status', options.status);
-      if (options.bloodType) params.append('bloodType', options.bloodType);
-      if (options.urgency) params.append('urgency', options.urgency);
+      if (options.search) {
+        params.append('search', options.search);
+      }
+      if (options.status) {
+        params.append('status', options.status);
+      }
+      if (options.dateFrom) {
+        params.append('dateFrom', options.dateFrom);
+      }
+      if (options.dateTo) {
+        params.append('dateTo', options.dateTo);
+      }
+      if (options.bloodGroup) {
+        params.append('bloodGroup', options.bloodGroup);
+      }
+      if (options.urgency) {
+        params.append('urgency', options.urgency);
+      }
 
       const response = await apiClient.get(
         `${endpoints.bloodRequests.export}?${params.toString()}`,
@@ -109,10 +148,15 @@ export function useExportBloodRequests() {
 }
 
 export function useDeleteBloodRequest() {
+  const queryClient = useQueryClient();
+  
   return useMutation({
     mutationFn: async (id: string) => {
       const { data } = await apiClient.delete(endpoints.bloodRequests.delete(id));
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bloodRequestKeys.lists() });
     },
   });
 } 

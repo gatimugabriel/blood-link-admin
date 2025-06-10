@@ -10,6 +10,56 @@ import { useExportBloodRequests } from "@/hooks/use-blood-requests";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { useDebounce } from "@/hooks/use-debounce";
+import { FilterOption, FilterValue } from "@/components/ui/data-table-filters";
+import { format } from "date-fns";
+
+// Define filter options for blood requests
+const bloodRequestFilters: FilterOption[] = [
+  {
+    id: 'status',
+    label: 'Status',
+    type: 'select',
+    options: [
+      { value: 'open', label: 'Open' },
+      { value: 'closed', label: 'Closed' },
+      { value: 'fulfilled', label: 'Fulfilled' },
+    ],
+    placeholder: 'Select status...',
+  },
+  {
+    id: 'bloodGroup',
+    label: 'Blood Group',
+    type: 'select',
+    options: [
+      { value: 'A+', label: 'A+' },
+      { value: 'A-', label: 'A-' },
+      { value: 'B+', label: 'B+' },
+      { value: 'B-', label: 'B-' },
+      { value: 'AB+', label: 'AB+' },
+      { value: 'AB-', label: 'AB-' },
+      { value: 'O+', label: 'O+' },
+      { value: 'O-', label: 'O-' },
+    ],
+    placeholder: 'Select blood group...',
+  },
+  {
+    id: 'urgency',
+    label: 'Urgency',
+    type: 'select',
+    options: [
+      { value: 'low', label: 'Low' },
+      { value: 'medium', label: 'Medium' },
+      { value: 'high', label: 'High' },
+    ],
+    placeholder: 'Select urgency...',
+  },
+  {
+    id: 'dateRange',
+    label: 'Date Range',
+    type: 'date-range',
+    placeholder: 'Select date range...',
+  },
+];
 
 export function BloodRequestsClient() {
   const [page, setPage] = useState(1);
@@ -18,11 +68,34 @@ export function BloodRequestsClient() {
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isServerSearch, setIsServerSearch] = useState(false);
+  const [filterValues, setFilterValues] = useState<FilterValue[]>([]);
+
+  // Convert filter values to API parameters
+  const getApiFilters = useCallback(() => {
+    const filters: any = {};
+    
+    filterValues.forEach(filter => {
+      if (filter.id === 'dateRange' && typeof filter.value === 'object') {
+        const dateRange = filter.value as { from?: Date; to?: Date };
+        if (dateRange.from) {
+          filters.dateFrom = format(dateRange.from, 'yyyy-MM-dd');
+        }
+        if (dateRange.to) {
+          filters.dateTo = format(dateRange.to, 'yyyy-MM-dd');
+        }
+      } else {
+        filters[filter.id] = filter.value;
+      }
+    });
+    
+    return filters;
+  }, [filterValues]);
 
   // all data without search
   const { data: allData, isLoading: isLoadingAll, error: allError, refetch: refetchAll } = useBloodRequests({
     page,
     limit,
+    ...getApiFilters(),
   });
 
   // server search results
@@ -31,12 +104,12 @@ export function BloodRequestsClient() {
     limit,
     search: isServerSearch ? debouncedSearchQuery : undefined,
     enableSearch: isServerSearch,
+    ...getApiFilters(),
   });
 
   const deleteMutation = useDeleteBloodRequest();
   const exportMutation = useExportBloodRequests();
 
-  // const data = isServerSearch ? searchData : allData;
   const isLoading = isServerSearch ? isLoadingSearch : isLoadingAll;
   const error = isServerSearch ? searchError : allError;
   const refetch = isServerSearch ? refetchSearch : refetchAll;
@@ -98,6 +171,18 @@ export function BloodRequestsClient() {
     setIsServerSearch(false);
   }, []);
 
+  const handleFiltersChange = useCallback((filters: FilterValue[]) => {
+    setFilterValues(filters);
+    setPage(1);
+    setIsServerSearch(false);
+  }, []);
+
+  const handleFiltersReset = useCallback(() => {
+    setFilterValues([]);
+    setPage(1);
+    setIsServerSearch(false);
+  }, []);
+
   // refetch when isServerSearch / when debouncedSearchQuery changes
   useEffect(() => {
     if (isServerSearch && debouncedSearchQuery) {
@@ -134,6 +219,7 @@ export function BloodRequestsClient() {
     try {
       const blob = await exportMutation.mutateAsync({
         search: searchQuery || undefined,
+        ...getApiFilters(),
       });
 
       // download link
@@ -182,6 +268,10 @@ export function BloodRequestsClient() {
         onRefresh={handleRefresh}
         onSearch={handleSearch}
         onDelete={handleDelete}
+        filters={bloodRequestFilters}
+        filterValues={filterValues}
+        onFiltersChange={handleFiltersChange}
+        onFiltersReset={handleFiltersReset}
       />
       <Toaster />
     </div>

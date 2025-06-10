@@ -26,6 +26,7 @@ import {DataTablePagination} from "./data-table-pagination";
 import {useDebounce} from "@/hooks/use-debounce";
 import {TableSkeleton} from "./table-skeleton";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
+import {DataTableFilters, FilterOption, FilterValue} from "./data-table-filters";
 
 interface DataTableProps<TData> {
     columns: ColumnDef<TData, any>[];
@@ -45,6 +46,11 @@ interface DataTableProps<TData> {
     onRefresh: () => void;
     onSearch: (query: string) => void;
     onDelete?: (id: string) => void;
+    // Optional filters
+    filters?: FilterOption[];
+    filterValues?: FilterValue[];
+    onFiltersChange?: (filters: FilterValue[]) => void;
+    onFiltersReset?: () => void;
 }
 
 export function DataTable<TData>({
@@ -60,6 +66,10 @@ export function DataTable<TData>({
                                      onRefresh,
                                      onSearch,
                                      onDelete,
+                                     filters = [],
+                                     filterValues = [],
+                                     onFiltersChange,
+                                     onFiltersReset,
                                  }: DataTableProps<TData>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -180,6 +190,16 @@ export function DataTable<TData>({
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+
+            {/* Filters */}
+            {filters.length > 0 && (
+                <DataTableFilters
+                    filters={filters}
+                    values={filterValues}
+                    onFiltersChange={onFiltersChange || (() => {})}
+                    onReset={onFiltersReset || (() => {})}
+                />
+            )}
 
             {/*Table */}
             <div className="rounded-md border">
