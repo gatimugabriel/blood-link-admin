@@ -1,9 +1,11 @@
 interface Donation {
     id: string;
-    status: 'pending' | 'approved' | 'completed' | 'cancelled';
-    bloodType: string;
-    createdAt: string;
-    updatedAt: string;
+    status: 'scheduled' | 'completed' | 'cancelled';
+    request: DonationRequest
+    donor: User
+    donationDate: Date;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 interface DonationStats {
@@ -14,14 +16,13 @@ interface DonationStats {
 
 //---- Data fetching types -----//
 interface UseDonationsOptions {
-    status?: string;
-    bloodType?: string;
-    dateRange?: {
-        from: string;
-        to: string;
-    };
     page?: number;
     limit?: number;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
+    search?: string;
+    enableSearch?: boolean;
+
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    bloodGroup?: string;
 }
