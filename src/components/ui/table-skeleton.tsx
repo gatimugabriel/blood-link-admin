@@ -4,9 +4,10 @@ interface TableSkeletonProps {
   columns: number;
   rows?: number;
   showHeader?: boolean;
+  isLoading?: boolean;
 }
 
-export function TableSkeleton({ columns, rows = 5, showHeader = true }: TableSkeletonProps) {
+export function TableSkeleton({ columns, rows = 5, showHeader = true, isLoading = true }: TableSkeletonProps) {
   return (
     <Table>
       {showHeader && (
@@ -14,7 +15,7 @@ export function TableSkeleton({ columns, rows = 5, showHeader = true }: TableSke
           <TableRow>
             {Array.from({ length: columns }).map((_, i) => (
               <TableHead key={i}>
-                <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                <div className={`h-4 w-24 bg-muted ${isLoading && 'animate-pulse'} rounded`} />
               </TableHead>
             ))}
           </TableRow>
@@ -25,7 +26,7 @@ export function TableSkeleton({ columns, rows = 5, showHeader = true }: TableSke
           <TableRow key={i}>
             {Array.from({ length: columns }).map((_, j) => (
               <TableCell key={j}>
-                <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                <div className={`h-4 w-full bg-muted ${isLoading && 'animate-pulse'} rounded`} />
               </TableCell>
             ))}
           </TableRow>

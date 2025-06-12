@@ -13,7 +13,6 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { FilterOption, FilterValue } from "@/components/ui/data-table-filters";
 import { format } from "date-fns";
 
-// Define filter options for blood requests
 const bloodRequestFilters: FilterOption[] = [
   {
     id: 'status',
@@ -70,7 +69,6 @@ export function BloodRequestsClient() {
   const [isServerSearch, setIsServerSearch] = useState(false);
   const [filterValues, setFilterValues] = useState<FilterValue[]>([]);
 
-  // Convert filter values to API parameters
   const getApiFilters = useCallback(() => {
     const filters: any = {};
     
@@ -123,14 +121,13 @@ export function BloodRequestsClient() {
     // state data filtering
     const searchLower = debouncedSearchQuery.toLowerCase();
     const filtered = allData.data.filter((item) => 
-      item.patientName.toLowerCase().includes(searchLower) ||
-      item.healthFacility.toLowerCase().includes(searchLower) ||
-      item.bloodGroup.toLowerCase().includes(searchLower)
+      item?.patientName?.toLowerCase().includes(searchLower) ||
+      item?.healthFacility?.toLowerCase().includes(searchLower) ||
+      item?.bloodGroup?.toLowerCase().includes(searchLower)
     );
 
     // trigger server search
     if (filtered.length === 0 && debouncedSearchQuery.trim() !== '') {
-      console.log('No results in client data, switching to server search');
       setIsServerSearch(true);
 
       return {
@@ -143,7 +140,7 @@ export function BloodRequestsClient() {
       };
     }
 
-    // Return filtered client data
+    // filtered client data
     return {
       ...allData,
       data: filtered,
@@ -253,8 +250,8 @@ export function BloodRequestsClient() {
       <DataTable
         columns={donationRequestsTableColumns}
         data={filteredData?.data ?? []}
-        filterBy="patientName"
-        tableName="blood requests"
+        filterBy="patient name or health facility"
+        tableName="blood-requests"
         isLoading={isLoading || isRefreshing}
         error={error}
         pagination={{

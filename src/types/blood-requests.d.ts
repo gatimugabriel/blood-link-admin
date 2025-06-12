@@ -5,6 +5,7 @@ interface BloodRequest {
     urgency: 'low' | 'medium' | 'high';
     status: "open" | "fulfilled" | "closed"
     healthFacility: string;
+    requestFor: "self" | "other";
     patientName: string;
     mobileNumber: string;
     requestLocation: {
@@ -13,6 +14,7 @@ interface BloodRequest {
         // longitude: number;
     };
     stringRequestLocation: any
+    user: User
     createdAt: string;
     updatedAt: string;
 }

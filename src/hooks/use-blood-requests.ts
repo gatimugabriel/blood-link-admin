@@ -94,13 +94,14 @@ export function useBloodRequests(options: UseBloodRequestsOptions = {}): UseQuer
   });
 }
 
-export function useBloodRequest(id: string) {
+export function useBloodRequest(id: string): UseQueryResult<BloodRequest> {
   return useQuery({
-    queryKey: ['blood-request', id],
+    queryKey: bloodRequestKeys.detail(id),
     queryFn: async () => {
       const { data } = await apiClient.get<BloodRequest>(endpoints.bloodRequests.get(id));      
       return data;
     },
+    staleTime: 0,
   });
 }
 

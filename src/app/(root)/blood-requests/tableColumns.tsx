@@ -18,8 +18,6 @@ import {
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 import { useState } from "react";
 
-
-// Status and urgency color mappings
 const statusColors = {
     open: "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20",
     fulfilled: "bg-green-500/10 text-green-500 hover:bg-green-500/20",

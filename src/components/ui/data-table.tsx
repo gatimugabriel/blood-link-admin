@@ -27,6 +27,7 @@ import {useDebounce} from "@/hooks/use-debounce";
 import {TableSkeleton} from "./table-skeleton";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {DataTableFilters, FilterOption, FilterValue} from "./data-table-filters";
+import {useRouter} from "next/navigation";
 
 interface DataTableProps<TData> {
     columns: ColumnDef<TData, any>[];
@@ -46,6 +47,8 @@ interface DataTableProps<TData> {
     onRefresh: () => void;
     onSearch: (query: string) => void;
     onDelete?: (id: string) => void;
+    onStatusUpdate?:(id: string, status: string) => void;
+
     // Optional filters
     filters?: FilterOption[];
     filterValues?: FilterValue[];
@@ -70,14 +73,15 @@ export function DataTable<TData>({
                                      filterValues = [],
                                      onFiltersChange,
                                      onFiltersReset,
+                                     onStatusUpdate,
                                  }: DataTableProps<TData>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [globalFilter, setGlobalFilter] = React.useState("");
     const [debouncedSearch] = useDebounce(globalFilter, 300);
+    const router = useRouter();
 
-    // Reset sorting when data changes
     React.useEffect(() => {
         setSorting([]);
     }, [data]);
@@ -135,14 +139,14 @@ export function DataTable<TData>({
                         </Button>
                     </AlertDescription>
                 </Alert>
-                <TableSkeleton columns={columns.length} rows={pagination.pageSize}/>
+                <TableSkeleton columns={columns.length} rows={pagination.pageSize} isLoading={false}/>
             </div>
         );
     }
 
     return (
         <div className="space-y-4">
-            {/* Search Input + Filters */}
+            {/* Search Input + View-filters */}
             <div className="flex items-center justify-between">
                 <div className="flex flex-1 items-center space-x-2">
                     <div className="relative flex-1 lg:mr-12">
@@ -237,6 +241,9 @@ export function DataTable<TData>({
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
+                                    className={`cursor-pointer`}
+                                    // @ts-ignore - I know the records in my table has id
+                                    onClick={() => router.push(`/${tableName}/${row.original.id}`)}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id} className={`text-center`}>
@@ -263,6 +270,7 @@ export function DataTable<TData>({
                     </TableBody>
                 </Table>
             </div>
+
             <DataTablePagination
                 currentPage={pagination.currentPage}
                 totalPages={pagination.totalPages}
@@ -274,4 +282,4 @@ export function DataTable<TData>({
             />
         </div>
     );
-} 
+}

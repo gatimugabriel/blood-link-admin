@@ -1,8 +1,8 @@
 import { format, parseISO } from "date-fns";
 
-export function formatDate(dateString: string, formatStr: string = 'PPp'): string {
-  try {
-    const date = parseISO(dateString);
+export function formatDate(dateString: string | Date, formatStr: string = 'PPp'): string {
+  try { 
+    const date = parseISO(dateString as string);
     return format(date, formatStr);
   } catch (error) {
     console.error('Error formatting date:', error);

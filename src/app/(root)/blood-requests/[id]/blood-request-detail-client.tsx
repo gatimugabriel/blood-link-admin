@@ -6,7 +6,7 @@ import {Button} from "@/components/ui/button";
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
 import {format, parseISO} from "date-fns";
-import {AlertTriangle, ArrowLeft, Calendar, Clock, Droplet, MapPin, Phone, User, Building2, Navigation, FileText} from "lucide-react";
+import {AlertTriangle, ArrowLeft, Calendar, Clock, Droplet, MapPin, Phone, User, Building2, Navigation, FileText, Heart, Mail} from "lucide-react";
 import {Skeleton} from "@/components/ui/skeleton";
 import {Separator} from "@/components/ui/separator";
 import {BloodRequestMap} from "./blood-request-map";
@@ -23,6 +23,11 @@ const urgencyColors = {
     high: "bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20",
 } as const;
 
+const requestForColors = {
+    self: "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 border-purple-500/20",
+    other: "bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 border-indigo-500/20",
+} as const;
+
 export function BloodRequestDetailClient() {
     const params = useParams();
     const router = useRouter();
@@ -37,6 +42,20 @@ export function BloodRequestDetailClient() {
         } catch (error) {
             return 'Invalid date';
         }
+    };
+
+    const getPatientName = () => {
+        if (bloodRequest?.requestFor === 'self') {
+            return `${bloodRequest.user?.firstName} ${bloodRequest.user?.lastName}`;
+        }
+        return bloodRequest?.patientName || 'Not specified';
+    };
+
+    const getPatientContact = () => {
+        if (bloodRequest?.requestFor === 'self') {
+            return bloodRequest?.mobileNumber || bloodRequest.user?.phone || 'Not specified';
+        }
+        return bloodRequest?.mobileNumber || 'Not specified';
     };
 
     if (error) {
@@ -115,12 +134,15 @@ export function BloodRequestDetailClient() {
                                             Created on {formatDate(bloodRequest.createdAt)}
                                         </CardDescription>
                                     </div>
-                                    <div className="flex gap-3">
+                                    <div className="flex gap-3 flex-wrap">
                                         <Badge variant="outline" className={`${statusColors[bloodRequest.status]} px-4 py-2 text-sm font-medium`}>
                                             {bloodRequest.status.charAt(0).toUpperCase() + bloodRequest.status.slice(1)}
                                         </Badge>
                                         <Badge variant="outline" className={`${urgencyColors[bloodRequest.urgency]} px-4 py-2 text-sm font-medium`}>
                                             {bloodRequest.urgency.charAt(0).toUpperCase() + bloodRequest.urgency.slice(1)} Priority
+                                        </Badge>
+                                        <Badge variant="outline" className={`${requestForColors[bloodRequest.requestFor]} px-4 py-2 text-sm font-medium`}>
+                                            Request for {bloodRequest.requestFor.charAt(0).toUpperCase() + bloodRequest.requestFor.slice(1)}
                                         </Badge>
                                     </div>
                                 </div>
@@ -165,7 +187,7 @@ export function BloodRequestDetailClient() {
                                                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                                                     <div className="flex items-center gap-3">
                                                         <Clock className="h-5 w-5 text-green-500"/>
-                                                        <span className="font-medium ">Last Updated</span>
+                                                        <span className="font-medium">Last Updated</span>
                                                     </div>
                                                     <span className="text-sm text-gray-500">{formatDate(bloodRequest.updatedAt)}</span>
                                                 </div>
@@ -177,7 +199,7 @@ export function BloodRequestDetailClient() {
                                 <Card className="shadow-sm">
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2 text-xl">
-                                            <User className="h-5 w-5 text-blue-500"/>
+                                            <Heart className="h-5 w-5 text-pink-500"/>
                                             Patient Information
                                         </CardTitle>
                                     </CardHeader>
@@ -186,16 +208,50 @@ export function BloodRequestDetailClient() {
                                             <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                                                 <div className="flex items-center gap-3">
                                                     <User className="h-5 w-5 text-gray-500"/>
-                                                    <span className="font-medium ">Patient Name</span>
+                                                    <span className="font-medium">Patient Name</span>
                                                 </div>
-                                                <span className="font-semibold">{bloodRequest.patientName}</span>
+                                                <span className="font-semibold">{getPatientName()}</span>
                                             </div>
                                             <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                                                 <div className="flex items-center gap-3">
                                                     <Phone className="h-5 w-5 text-gray-500"/>
-                                                    <span className="font-medium ">Mobile Number</span>
+                                                    <span className="font-medium">Contact Number</span>
                                                 </div>
-                                                <span className="font-semibold">{bloodRequest.mobileNumber}</span>
+                                                <span className="font-semibold">{getPatientContact()}</span>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="shadow-sm">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2 text-xl">
+                                            <User className="h-5 w-5 text-blue-500"/>
+                                            Requester Information
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                                                <div className="flex items-center gap-3">
+                                                    <User className="h-5 w-5 text-gray-500"/>
+                                                    <span className="font-medium">Requester Name</span>
+                                                </div>
+                                                <span className="font-semibold">{bloodRequest.user?.firstName} {bloodRequest.user?.lastName}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                                                <div className="flex items-center gap-3">
+                                                    <Mail className="h-5 w-5 text-gray-500"/>
+                                                    <span className="font-medium">Email</span>
+                                                </div>
+                                                <span className="font-semibold">{bloodRequest.user?.email}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                                                <div className="flex items-center gap-3">
+                                                    <Phone className="h-5 w-5 text-gray-500"/>
+                                                    <span className="font-medium">Phone</span>
+                                                </div>
+                                                <span className="font-semibold">{bloodRequest.user?.phone}</span>
                                             </div>
                                         </div>
                                     </CardContent>
@@ -220,19 +276,41 @@ export function BloodRequestDetailClient() {
                                             <div className="flex items-start justify-between p-3 bg-muted rounded-lg">
                                                 <div className="flex items-start gap-3">
                                                     <MapPin className="h-5 w-5 text-gray-500 mt-0.5"/>
-                                                    <span className="font-medium">Address</span>
+                                                    <span className="font-medium">Request Address</span>
                                                 </div>
                                                 <span className="font-semibold text-right max-w-xs">{bloodRequest.stringRequestLocation}</span>
                                             </div>
                                             <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                                                 <div className="flex items-center gap-3">
                                                     <Navigation className="h-5 w-5 text-gray-500"/>
-                                                    <span className="font-medium">Coordinates</span>
+                                                    <span className="font-medium">Request Coordinates</span>
                                                 </div>
                                                 <span className="font-mono text-sm">
                                                     {bloodRequest.requestLocation.coordinates[1].toFixed(6)}, {bloodRequest.requestLocation.coordinates[0].toFixed(6)}
                                                 </span>
                                             </div>
+                                            {bloodRequest.user?.primaryLocation && (
+                                                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                                                    <div className="flex items-center gap-3">
+                                                        <MapPin className="h-5 w-5 text-gray-500"/>
+                                                        <span className="font-medium">Requester Primary Location</span>
+                                                    </div>
+                                                    <span className="font-mono text-sm">
+                                                        {bloodRequest.user.primaryLocation.coordinates[1].toFixed(6)}, {bloodRequest.user.primaryLocation.coordinates[0].toFixed(6)}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {bloodRequest.user?.lastKnownLocation && (
+                                                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                                                    <div className="flex items-center gap-3">
+                                                        <Navigation className="h-5 w-5 text-gray-500"/>
+                                                        <span className="font-medium">Requester Last Known Location</span>
+                                                    </div>
+                                                    <span className="font-mono text-sm">
+                                                        {bloodRequest.user.lastKnownLocation.coordinates[1].toFixed(6)}, {bloodRequest.user.lastKnownLocation.coordinates[0].toFixed(6)}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -268,7 +346,7 @@ export function BloodRequestDetailClient() {
                                         <div className="space-y-3">
                                             <Button className="w-full justify-start" variant="outline">
                                                 <Phone className="mr-2 h-4 w-4"/>
-                                                Contact Patient
+                                                Contact Requester
                                             </Button>
                                             <Button className="w-full justify-start" variant="outline">
                                                 <MapPin className="mr-2 h-4 w-4"/>
