@@ -3,7 +3,7 @@ interface User {
     firstName: string;
     lastName: string;
     email: string;
-    phoneNumber?: string;
+    phone?: string;
     bloodGroup?: string;
     role: 'admin' | 'user' | 'donor' | 'recipient';
     status: 'active' | 'inactive' | 'suspended';
