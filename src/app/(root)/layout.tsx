@@ -1,7 +1,8 @@
-import React from "react";
+import React, { Suspense } from "react";
 import {AppSidebar} from "@/components/app-sidebar"
 import {SiteHeader} from "@/components/site-header"
 import {SidebarInset, SidebarProvider,} from "@/components/ui/sidebar"
+import { PageLoading } from "@/components/page-loading"
 
 export default function ProtectedRootLayout({children}: { children: React.ReactNode }) {
     return (
@@ -18,7 +19,9 @@ export default function ProtectedRootLayout({children}: { children: React.ReactN
                 <SiteHeader/>
                 <div className="flex flex-1 flex-col">
                     <div className="@container/main flex flex-1 flex-col px-2">
-                        {children}
+                        <Suspense fallback={<PageLoading message="Loading page..." />}>
+                            {children}
+                        </Suspense>
                     </div>
                 </div>
             </SidebarInset>

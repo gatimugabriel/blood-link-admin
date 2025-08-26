@@ -84,7 +84,7 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
+            {/* <DropdownMenuGroup>
               <DropdownMenuItem>
                 <IconUserCircle />
                 Account
@@ -97,11 +97,14 @@ export function NavUser({
                 <IconNotification />
                 Notifications
               </DropdownMenuItem>
-            </DropdownMenuGroup>
+            </DropdownMenuGroup> */}
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <IconLogout onClick={() => signOut()} />
-              Log out
+              <button className="flex items-center gap-2 cursor-pointer" onClick={async () => await signOut()}>
+                <IconLogout />
+                Log out
+              </button>
+              {/* <IconLogout onClick={async () => await signOut()} /> */}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

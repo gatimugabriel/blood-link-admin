@@ -12,8 +12,8 @@ const SESSION_DURATION = 60 * 60 * 24 * 7;
 export async function setSessionCookies(data: SignInResult) {
     const cookieStore = await cookies();
 
-    // Set cookies in the browser
-    cookieStore.set("accessToken", data.refreshToken, {
+    // Set refresh token cookie
+    cookieStore.set("refreshToken", data.refreshToken, {
         maxAge: SESSION_DURATION,
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -21,8 +21,9 @@ export async function setSessionCookies(data: SignInResult) {
         sameSite: "lax",
     });
 
+    // Set access token cookie
     cookieStore.set("accessToken", data.accessToken, {
-        maxAge: 60 * 20,
+        maxAge: 60 * 20, // 20 minutes
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         path: "/",
@@ -32,7 +33,7 @@ export async function setSessionCookies(data: SignInResult) {
 
 export async function signIn(body: SignInParams): Promise<any> {
     try {
-        const response = await fetch(`${API_BASE_URL}/auth/signin`, {
+        const response = await fetch(`${API_BASE_URL}/admin/signin`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -49,20 +50,8 @@ export async function signIn(body: SignInParams): Promise<any> {
             };
         }
 
-        const cookieStore = await cookies();
-        cookieStore.set("accessToken", JSON.stringify(data.accessToken), {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            path: '/',
-        });
-
-        cookieStore.set("refreshToken", JSON.stringify(data.refreshToken), {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            path: '/',
-        });
+        // Set cookies using the helper function
+        await setSessionCookies(data);
 
         return {
             success: true,
@@ -80,7 +69,7 @@ export async function signIn(body: SignInParams): Promise<any> {
 export async function signUp(body: SignUpParams): Promise<any> {
     try {
 
-        const response = await fetch(`${API_BASE_URL}/auth/signin`, {
+        const response = await fetch(`${API_BASE_URL}/admin/signup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -111,6 +100,8 @@ export async function signUp(body: SignUpParams): Promise<any> {
 // Sign out user by clearing the session cookie
 export async function signOut(): Promise<any> {
     try {
+        // console.log("sigout clicked");
+
         const response = await fetch(`${API_BASE_URL}/auth/signout`, {
             method: 'POST',
             headers: {
@@ -121,6 +112,7 @@ export async function signOut(): Promise<any> {
         });
 
         const data = await response.json();
+        console.log("signout data ", data);
 
         if (!response.ok) {
             return {
@@ -130,9 +122,10 @@ export async function signOut(): Promise<any> {
         }
 
         const cookieStore = await cookies();
-        cookieStore.delete("session");
+        cookieStore.delete("accessToken");
+        cookieStore.delete("refreshToken");
 
-        return NextResponse.redirect("/auth/signin", {
+        return NextResponse.redirect("/sign-in", {
             status: 302,
         });
     } catch (error: any) {
@@ -151,11 +144,23 @@ export async function getCurrentUser(): Promise<any | null> {
     if (!accessTokenCookie) return null;
 
     try {
-        return { accessToken: accessTokenCookie }
-    } catch (error) {
-        console.log(error);
+        // Verify token with backend
+        const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessTokenCookie}`,
+                'Content-Type': 'application/json',
+            },
+        });
 
-        // Invalid or expired session
+        if (!response.ok) {
+            return null;
+        }
+
+        const userData = await response.json();
+        return userData;
+    } catch (error) {
+        console.log('Token verification failed:', error);
         return null;
     }
 }

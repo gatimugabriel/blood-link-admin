@@ -12,6 +12,7 @@ import FormField from "./FormField";
 import { IconExclamationMark } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { signIn, signUp } from "@/lib/actions/auth.action";
+import { Loader2 } from "lucide-react";
 
 const authFormSchema = (type: FormType) => {
     return z.object({
@@ -36,7 +37,6 @@ const AuthForm = ({ type }: { type: FormType }) => {
     });
     const isSignIn = type === "sign-in";
 
-
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
         try {
             if (type === "sign-in") {
@@ -47,14 +47,20 @@ const AuthForm = ({ type }: { type: FormType }) => {
                     });
                     return;
                 }
-                    
+
                 toast.success("Signed in successfully.", {
                     position: "top-left",
                 });
-                router.push("/dashboard");
+                // Use replace to avoid back button issues
+                router.replace("/dashboard");
             } else {
                 const { firstName, lastName, email, password } = data
-                const result = await signUp({ firstName, lastName, email, password });
+                const result = await signUp({
+                    firstName: firstName || "",
+                    lastName: lastName || "",
+                    email,
+                    password
+                });
                 if (!result.success) {
                     toast.error(result.message);
                     return;
@@ -69,7 +75,6 @@ const AuthForm = ({ type }: { type: FormType }) => {
                 position: "top-center"
             });
         }
-
     }
 
     return (
@@ -123,8 +128,19 @@ const AuthForm = ({ type }: { type: FormType }) => {
                             type="password"
                         />
 
-                        <Button className="btn" type="submit" aria-disabled={form.formState.isSubmitting}>
-                           {form.formState.isLoading || form.formState.isSubmitting ? "please wait..." : `${isSignIn ? "Sign In" : "Create an Account"}`}
+                        <Button
+                            className="btn"
+                            type="submit"
+                            disabled={form.formState.isSubmitting}
+                        >
+                            {form.formState.isSubmitting ? (
+                                <div className="flex items-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Please wait...
+                                </div>
+                            ) : (
+                                `${isSignIn ? "Sign In" : "Create an Account"}`
+                            )}
                         </Button>
 
                         <div
@@ -142,7 +158,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
                     </form>
                 </Form>
 
-                <p className="text-center">
+                {/* <p className="text-center">
                     {isSignIn ? "No account yet?" : "Have an account already?"}
                     <Link
                         href={!isSignIn ? "/sign-in" : "/sign-up"}
@@ -150,7 +166,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
                     >
                         {!isSignIn ? "Sign In" : "Sign Up"}
                     </Link>
-                </p>
+                </p> */}
             </div>
         </div>
     );

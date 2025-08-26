@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import {
   IconCamera,
   IconChartBar,
@@ -25,6 +26,7 @@ import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
+import { ThemeToggleCompact } from "@/components/theme-toggle-compact"
 import {
   Sidebar,
   SidebarContent,
@@ -57,21 +59,21 @@ const data = {
       url: "/donations",
       icon: IconDropletHeart,
     },
-    {
-      title: "Facilities/Centers",
-      url: "/#",
-      icon: IconHospital,
-    },
-    {
-      title: "Users",
-      url: "#",
-      icon: IconUsers,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
+    // {
+    //   title: "Facilities/Centers",
+    //   url: "/facilities",
+    //   icon: IconHospital,
+    // },
+    // {
+    //   title: "Users",
+    //   url: "/users",
+    //   icon: IconUsers,
+    // },
+    // {
+    //   title: "Analytics",
+    //   url: "/analytics",
+    //   icon: IconChartBar,
+    // },
   ],
   navClouds: [
     {
@@ -122,38 +124,38 @@ const data = {
     },
   ],
   navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
+    // {
+    //   title: "Settings",
+    //   url: "/settings",
+    //   icon: IconSettings,
+    // },
+    // {
+    //   title: "Get Help",
+    //   url: "/help",
+    //   icon: IconHelp,
+    // },
+    // {
+    //   title: "Search",
+    //   url: "/search",
+    //   icon: IconSearch,
+    // },
   ],
   documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
+    // {
+    //   name: "Data Library",
+    //   url: "/data-library",
+    //   icon: IconDatabase,
+    // },
     {
       name: "Reports",
       url: "/reports",
       icon: IconReport,
     },
-    {
-      name: "My Documnets",
-      url: "#",
-      icon: IconFolder,
-    },
+    // {
+    //   name: "My Documents",
+    //   url: "/documents",
+    //   icon: IconFolder,
+    // },
   ],
 }
 
@@ -167,10 +169,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
+              <Link href="/dashboard">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">BloodLink KE.</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -181,8 +183,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
+        <div className="flex items-center justify-center p-2">
+          <ThemeToggleCompact />
+        </div>
         <NavUser user={data.user} />
       </SidebarFooter>
-    </Sidebar>
+    </Sidebar >
   )
 }

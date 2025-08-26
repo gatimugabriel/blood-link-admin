@@ -4,6 +4,7 @@ import {Button} from "@/components/ui/button"
 import {Separator} from "@/components/ui/separator"
 import {SidebarTrigger} from "@/components/ui/sidebar"
 import {IconSearch} from "@tabler/icons-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function SiteHeader() {
     return (
@@ -25,6 +26,7 @@ export function SiteHeader() {
                             <span className="sr-only">Search</span>
                         </div>
                     </Button>
+                    <ThemeToggle />
                 </div>
             </div>
         </header>

@@ -1,9 +1,10 @@
-import React, {Suspense} from 'react'
+import React, { Suspense } from 'react'
 import AuthForm from '@/components/AuthForm'
+import { PageLoading } from '@/components/page-loading'
 
-export default function page() {
+export default function SignInPage() {
     return (
-        <Suspense>
+        <Suspense fallback={<PageLoading message="Loading sign-in..." />}>
             <AuthForm type="sign-in"/>
         </Suspense>
     )

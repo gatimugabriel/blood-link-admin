@@ -1,13 +1,14 @@
-import { ReactNode } from "react";
-import { redirect } from "next/navigation";
+import { ReactNode, Suspense } from "react";
+import { PageLoading } from "@/components/page-loading";
 
-import { isAuthenticated } from "@/lib/actions/auth.action";
-
-const AuthLayout = async ({ children }: { children: ReactNode }) => {
-  const isUserAuthenticated = await isAuthenticated();
-  if (isUserAuthenticated) redirect("/dashboard");
-
-  return <div className="auth-layout">{children}</div>;
+const AuthLayout = ({ children }: { children: ReactNode }) => {
+  return (
+    <div className="auth-layout">
+      <Suspense fallback={<PageLoading message="Loading..." />}>
+        {children}
+      </Suspense>
+    </div>
+  );
 };
 
 export default AuthLayout;

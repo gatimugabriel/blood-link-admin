@@ -12,15 +12,13 @@ export const metadata: Metadata = {
   description: "Admin dashboard for Blood Link application",
 };
 
-const prefersDarkMode = false
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${prefersDarkMode ? "dark" : ""}`} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
